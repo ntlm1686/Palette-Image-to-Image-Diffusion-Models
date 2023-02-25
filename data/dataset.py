@@ -4,8 +4,11 @@ from PIL import Image
 import os
 import torch
 import numpy as np
+import cv2
+from torch.utils.data import Dataset
 
 from .util.mask import (bbox2mask, brush_stroke_mask, get_irregular_mask, random_bbox, random_cropping_bbox)
+from .util import imread, readline_txt
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -174,3 +177,44 @@ class ColorizationDataset(data.Dataset):
         return len(self.flist)
 
 
+class HCOCO(Dataset):
+    def __init__(self, split, root="./data", image_size=512):
+        super(HCOCO, self).__init__()
+        self.root = root
+        self.file_names = readline_txt(os.path.join(root, "HCOCO_train.txt" if split == "train" else "HCOCO_test.txt"))
+        self.image_size = (image_size, image_size)
+        self.tfs_mask = transforms.Compose([
+                transforms.Resize((image_size, image_size)),
+                transforms.ToTensor(),
+        ])
+        self.tfs = transforms.Compose([
+                transforms.Resize((image_size, image_size)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5,0.5, 0.5])
+        ])
+
+    def file_helpler(self, file_name, what):
+        name, ext = file_name.split(".")
+        bg, mask, ix = name.split("_")
+        if what == "mask":
+            return f"{bg}_{mask}.png"
+        elif what == "real":
+            return f"{bg}.{ext}"
+
+    def __getitem__(self, index):
+        comp = Image.open(os.path.join(
+            self.root, "composite_images", self.file_names[index])).convert('RGB')
+        mask = Image.open(os.path.join(
+            self.root, "masks", self.file_helpler(self.file_names[index], "mask"))).convert('1')
+        real = Image.open(os.path.join(
+            self.root, "real_images", self.file_helpler(self.file_names[index], "real"))).convert('RGB')
+
+        # print(self.tfs(comp).shape, self.tfs_mask(mask).shape)
+        return {
+            'gt_image': self.tfs(real),
+            'cond_image': torch.cat([self.tfs(comp), self.tfs_mask(mask)], axis=0),
+            'path': ""
+        }
+
+    def __len__(self):
+        return len(self.file_names)

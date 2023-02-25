@@ -1,9 +1,8 @@
 {
-    "name": "colorization_mirflickr25k", // experiments name
+    "name": "harmonization_hcoco", // experiments name
     "gpu_ids": [1], // gpu ids list, default is single 0
     "seed" : -1, // random seed, seed <0 represents randomization not used 
     "finetune_norm": false, // find the parameters to optimize
-
     "path": { //set every part file path
         "base_dir": "experiments", // base path for all log except resume_state
         "code": "code", // code backup
@@ -17,38 +16,29 @@
     "datasets": { // train or test
         "train": { 
             "which_dataset": {  // import designated dataset using arguments 
-                "name": ["data.dataset", "ColorizationDataset"], // import Dataset() class / function(not recommend) from data.dataset.py (default is [data.dataset.py])
+                "name": ["data.dataset", "HCOCO"], // import Dataset() class / function(not recommend) from data.dataset.py (default is [data.dataset.py])
                 "args":{ // arguments to initialize dataset
-                    "data_root": "datasets/mirflickr25k/images",
-                    "data_flist": "datasets/mirflickr25k/flist/train.flist",
-                    "data_len": -1
+                    "root": "datasets/hcoco",
+                    "split": "train"
                 } 
             },
             "dataloader":{
-                "validation_split": 2, // percent or number 
                 "args":{ // arguments to initialize train_dataloader
-                    "batch_size": 4, // batch size in each gpu
+                    "batch_size": 2, // batch size in each gpu
                     "num_workers": 4,
                     "shuffle": true,
                     "pin_memory": true,
                     "drop_last": true
-                },
-                "val_args":{ // arguments to initialize valid_dataloader, will overwrite the parameters in train_dataloader
-                    "batch_size": 1, // batch size in each gpu
-                    "num_workers": 4,
-                    "shuffle": false,
-                    "pin_memory": true,
-                    "drop_last": false
                 }
             }
         },
         "test": { 
-            "which_dataset": {
-                "name": "ColorizationDataset", // import Dataset() class / function(not recommend) from default file
-                "args":{
-                    "data_root": "datasets/mirflickr25k/images",
-                    "data_flist": "datasets/mirflickr25k/flist/test.flist"
-                }
+            "which_dataset": {  // import designated dataset using arguments 
+                "name": ["data.dataset", "HCOCO"], // import Dataset() class / function(not recommend) from data.dataset.py (default is [data.dataset.py])
+                "args":{ // arguments to initialize dataset
+                    "root": "datasets/hcoco",
+                    "split": "test"
+                } 
             },
             "dataloader":{
                 "args":{
@@ -83,7 +73,7 @@
                     "init_type": "kaiming", // method can be [normal | xavier| xavier_uniform | kaiming | orthogonal], default is kaiming
                     "module_name": "guided_diffusion", // sr3 | guided_diffusion
                     "unet": {
-                        "in_channel": 6,
+                        "in_channel": 7,
                         "out_channel": 3,
                         "inner_channel": 64,
                         "channel_mults": [
