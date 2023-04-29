@@ -176,21 +176,47 @@ class ColorizationDataset(data.Dataset):
     def __len__(self):
         return len(self.flist)
 
+import os
+import random
+import numpy as np
+from pathlib import Path
+from PIL import Image
 
-class HCOCO(Dataset):
-    def __init__(self, split, root="./data", image_size=512):
-        super(HCOCO, self).__init__()
+import torch
+from torch.utils.data import Dataset
+from torchvision import transforms
+
+
+def readline_txt(txt_file):
+    if txt_file is None:
+        out = []
+    else:
+        with open(txt_file, 'r') as ff:
+            out = [x[:-1] for x in ff.readlines()]
+    return out
+
+
+class iHarmony4(Dataset):
+    def __init__(self,
+                 split: str = "train",
+                 datasets: list = ["HAdobe5k", "HCOCO", "Hday2night", "HFlickr"],
+                 root="./data/iharmony4",
+                 image_size=512):
+        super(iHarmony4, self).__init__()
         self.root = root
-        self.file_names = readline_txt(os.path.join(root, "HCOCO_train.txt" if split == "train" else "HCOCO_test.txt"))
+        self.file_names = []
+        self.prefix = []
+        for dataset in datasets:
+            assert dataset in ["HAdobe5k", "HCOCO", "Hday2night", "HFlickr"]
+            dataset_files = readline_txt(os.path.join(root, dataset, dataset+("_train.txt" if split == "train" else "_test.txt")))
+            self.file_names += dataset_files
+            self.prefix += [dataset] * len(dataset_files)
+            # self.file_names += [dataset+'/'+fname for fname in dataset_files]
         self.image_size = (image_size, image_size)
-        self.tfs_mask = transforms.Compose([
-                transforms.Resize((image_size, image_size)),
-                transforms.ToTensor(),
-        ])
-        self.tfs = transforms.Compose([
-                transforms.Resize((image_size, image_size)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5,0.5, 0.5])
+        self.transform = transforms.Compose([
+            transforms.Resize((image_size, image_size), interpolation=transforms.InterpolationMode.BICUBIC),
+            transforms.ToTensor(),
+            transforms.Normalize([0.5], [0.5]),
         ])
 
     def file_helpler(self, file_name, what):
@@ -203,17 +229,16 @@ class HCOCO(Dataset):
 
     def __getitem__(self, index):
         comp = Image.open(os.path.join(
-            self.root, "composite_images", self.file_names[index])).convert('RGB')
+            self.root, self.prefix[index], "composite_images", self.file_names[index]))
         mask = Image.open(os.path.join(
-            self.root, "masks", self.file_helpler(self.file_names[index], "mask"))).convert('1')
+            self.root, self.prefix[index], "masks", self.file_helpler(self.file_names[index], "mask"))).convert('1')
         real = Image.open(os.path.join(
-            self.root, "real_images", self.file_helpler(self.file_names[index], "real"))).convert('RGB')
+            self.root, self.prefix[index], "real_images", self.file_helpler(self.file_names[index], "real")))
 
-        # print(self.tfs(comp).shape, self.tfs_mask(mask).shape)
         return {
-            'gt_image': self.tfs(real),
-            'cond_image': torch.cat([self.tfs(comp), self.tfs_mask(mask)], axis=0),
-            'path': ""
+            "gt_image": self.transform(real),
+            "cond_image": torch.cat([self.transform(comp), self.transform(mask)], axis=0),
+            "path": self.file_names[index],
         }
 
     def __len__(self):
