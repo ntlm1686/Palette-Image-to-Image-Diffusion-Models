@@ -20,7 +20,7 @@
                 "name": ["data.dataset", "iHarmony4"], // import Dataset() class / function(not recommend) from data.dataset.py (default is [data.dataset.py])
                 "args":{ // arguments to initialize dataset
                     "split": "train",
-                    "root": "/home/jiajie/Code/private/color_prior/data/iharmony4",
+                    "root": "/home/ljiajie/Code/DeepColorPrior/data/iharmony4",
                     "image_size": 256
                 } 
             },
@@ -47,7 +47,7 @@
                 "name": "iHarmony4", // import Dataset() class / function(not recommend) from default file
                 "args":{
                     "split": "test",
-                    "root": "/home/jiajie/Code/private/color_prior/data/iharmony4",
+                    "root": "/home/ljiajie/Code/DeepColorPrior/data/iharmony4",
                     "image_size": 256
                 }
             },

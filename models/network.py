@@ -86,12 +86,14 @@ class Network(BaseNetwork):
 
     @torch.no_grad()
     def restoration(self, y_cond, y_t=None, y_0=None, mask=None, sample_num=8):
-        b, *_ = y_cond.shape
+        # b, *_ = y_cond.shape
+        b, c, h, w = y_cond.shape
 
         assert self.num_timesteps > sample_num, 'num_timesteps must greater than sample_num'
         sample_inter = (self.num_timesteps//sample_num)
         
-        y_t = default(y_t, lambda: torch.randn_like(y_cond))
+        # y_t = default(y_t, lambda: torch.randn_like(y_cond))
+        y_t = default(y_t, lambda: torch.randn(b,3,h,w, device=y_cond.device))
         ret_arr = y_t
         for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
             t = torch.full((b,), i, device=y_cond.device, dtype=torch.long)
@@ -177,5 +179,3 @@ def make_beta_schedule(schedule, n_timestep, linear_start=1e-6, linear_end=1e-2,
     else:
         raise NotImplementedError(schedule)
     return betas
-
-
