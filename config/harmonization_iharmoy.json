@@ -1,5 +1,5 @@
 {
-    "name": "colorization_mirflickr25k", // experiments name
+    "name": "iharmony4", // experiments name
     "gpu_ids": [1], // gpu ids list, default is single 0
     "seed" : -1, // random seed, seed <0 represents randomization not used 
     "finetune_norm": false, // find the parameters to optimize
@@ -10,8 +10,8 @@
         "tb_logger": "tb_logger", // path of tensorboard logger
         "results": "results",
         "checkpoint": "checkpoint",
-        // "resume_state": "experiments/inpainting_places2_220413_143231/checkpoint/25" 
-        "resume_state": null // ex: 100, loading .state  and .pth from given epoch and iteration
+        "resume_state": "/home/ljiajie/Code/Palette-Image-to-Image-Diffusion-Models/ckpt/630.state" 
+        // "resume_state": null // ex: 100, loading .state  and .pth from given epoch and iteration
     },
 
     "datasets": { // train or test
@@ -130,7 +130,7 @@
     },
 
     "train": { // arguments for basic training
-        "n_epoch": 1e8, // max epochs, not limited now
+        "n_epoch": 100, // max epochs, not limited now
         "n_iter": 1e8, // max interations
         "val_epoch": 5, // valdation every specified number of epochs
         "save_checkpoint_epoch": 10,
